@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba Jquery Aarón Estrada Nieto</h1>
+
+    <label>Seleccione un oficio: </label>
+    <select id="selectoficios"></select>
+    <hr/>
+    <label>Incremento salarial: </label>
+    <input type="text" id="incrementosalarial"/> 
+    <hr/>
+    <button type="button" id="botonincremento">
+        Incrementar salarios
+    </button>
+    <hr/>
+    <table id="tablaempleados" border="1">
+        <thead>
+            <th>Apellido</th>
+            <th>oficio</th>
+            <th>Salario</th>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="js/jquery-3.6.1.min.js"></script>
+    <script>
+        var url = "https://apiempleadosaction.azurewebsites.net/"
+
+        //Funcion que al cargar la página me muestre en un select los oficios disponibles
+        function cargarElementos(){
+            var request = "api/Empleados/GetOficios/oficios";
+            $.ajax({
+                "url": url + request,
+                "type": "GET",
+                "dataType":"json",
+                success: function(data){
+                    console.log("Loading Data...");
+                    $.each(data, function(index, oficio){
+                        var select = $("<option>", {
+                            "value":oficio, "text":oficio
+                        });
+                        select.appendTo($("#selectoficios"));
+                    });
+                }
+            });
+        }
+
+        function getSalario(){
+            var newSal = parseInt($("#incrementosalarial").val());
+
+            var NewSalario = new Object();
+            NewSalario.salario = newSal;
+
+            var dataJson = JSON.stringify(NewSalario);
+            console.log(NewSalario.salario);
+            return dataJson;
+        }
+
+
+
+
+        $(document).ready(function(){
+            cargarElementos();
+            //Muestro en la tabla los empleados que hacen ese oficio:
+            $("#selectoficios").change(function(){
+                var indice = $(this).val();
+                var request = "api/Empleados/GetEmpleadosOficio/empleadosoficio/"+indice;
+                $.ajax({
+                    "url": url+request,
+                    "method":"GET",
+                    "dataType":"json",
+                    success: function(data){
+                        var html = "";
+                        $.each(data, function(index, empleado){
+                            html += "<tr>";
+                            html += "<td>"+empleado.apellido+"</td>";
+                            html += "<td>"+empleado.oficio+"</td>";
+                            html += "<td>"+empleado.salario+"</td>";
+                            html += "</tr>";
+                        });
+                        $("#tablaempleados tbody").html(html);
+                    }
+                })
+                //Cuando pulse el botón... que me guarde el nuevo salario 
+                $("#botonincremento").click(function(){
+                    var newSal = parseInt($("#incrementosalarial").val());
+                    var salario = getSalario();
+                    request = "api/Empleados/IncrementarSalarioOficios/"+indice+"/"+newSal;
+                    console.log(url+request);
+                    $.ajax({
+                        url: url + request,
+                        type:"PUT",
+                        data:salario,
+                        contentType: "application/json",
+                        succes: function(data){
+                            console.log("Salario editado");
+                            cargarElementos();
+                            
+                        }
+
+                    });
+            });
+            });
+            
+
+
+
+
+        });
+    </script>
+</body>
+</html>
